@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"blog.samuka007.xyz","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="想要服务本地化，但是却受限于物理环境。在家里，很多时候只有一到两个网口通向弱电箱——一个做iptv，另一个则是上网线。有限的物理环境让我们部署本地化服务的道路困难重重。如何能拓展有线连接，实现桥接拨号的同时不影响iptv的连接呢？VLAN跳出来说：我来！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="单线复用，旧家的本地化之路">
+<meta property="og:url" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/index.html">
+<meta property="og:site_name" content="Samuka007&#39;s Blog">
+<meta property="og:description" content="想要服务本地化，但是却受限于物理环境。在家里，很多时候只有一到两个网口通向弱电箱——一个做iptv，另一个则是上网线。有限的物理环境让我们部署本地化服务的道路困难重重。如何能拓展有线连接，实现桥接拨号的同时不影响iptv的连接呢？VLAN跳出来说：我来！">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/1.jpg">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/2.jpg">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/3.png">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/4.jpg">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/5.png">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/6.png">
+<meta property="og:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/7.png">
+<meta property="article:published_time" content="2023-01-28T09:26:33.000Z">
+<meta property="article:modified_time" content="2023-01-28T09:37:36.864Z">
+<meta property="article:author" content="Samuka007">
+<meta property="article:tag" content="network">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/1.jpg">
+
+
+<link rel="canonical" href="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/","path":"2023/01/28/单线复用，旧家的本地化之路/","title":"单线复用，旧家的本地化之路"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>单线复用，旧家的本地化之路 | Samuka007's Blog</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Samuka007's Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E6%80%A7-amp-%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">适用性&amp;原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E6%96%99"><span class="nav-number">2.</span> <span class="nav-text">原料</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%99%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">教程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E8%AE%BE%E8%AE%A1%E7%BD%91%E7%BB%9C%E6%8B%93%E6%89%91"><span class="nav-number">3.1.</span> <span class="nav-text">一、设计网络拓扑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E8%AE%BE%E7%BD%AE%E4%BA%A4%E6%8D%A2%E6%9C%BAVLAN"><span class="nav-number">3.2.</span> <span class="nav-text">二、设置交换机VLAN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E8%AE%BE%E7%BD%AE%E8%BD%AF%E8%B7%AF%E7%94%B1VLAN%E4%B8%8E%E6%8B%A8%E5%8F%B7"><span class="nav-number">3.3.</span> <span class="nav-text">三、设置软路由VLAN与拨号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%85%B6%E4%BB%96%E4%BA%8B%E9%A1%B9"><span class="nav-number">3.4.</span> <span class="nav-text">四、其他事项</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Samuka007</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://blog.samuka007.xyz/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Samuka007">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Samuka007's Blog">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="单线复用，旧家的本地化之路 | Samuka007's Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          单线复用，旧家的本地化之路
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2023-01-28 17:26:33 / 修改时间：17:37:36" itemprop="dateCreated datePublished" datetime="2023-01-28T17:26:33+08:00">2023-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Tips/" itemprop="url" rel="index"><span itemprop="name">Tips</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Tips/%E5%90%8E%E4%BA%92%E8%81%94%E7%BD%91%E6%97%B6%E4%BB%A3%E8%87%AA%E6%95%91%E6%8C%87%E5%8D%97/" itemprop="url" rel="index"><span itemprop="name">后互联网时代自救指南</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>想要服务本地化，但是却受限于物理环境。在家里，很多时候只有一到两个网口通向弱电箱——一个做iptv，另一个则是上网线。有限的物理环境让我们部署本地化服务的道路困难重重。如何能拓展有线连接，实现桥接拨号的同时不影响iptv的连接呢？VLAN跳出来说：我来！</p>
+<span id="more"></span>
+<h1 id="适用性-amp-原理"><a href="#适用性-amp-原理" class="headerlink" title="适用性&amp;原理"></a>适用性&amp;原理</h1><p>•	希望在简单的物理连接条件下实现复合的网络通讯<br>•	通过802.1Q VLAN实现</p>
+<h1 id="原料"><a href="#原料" class="headerlink" title="原料"></a>原料</h1><p>•	2台支持VLAN的设备<br>o	比如一网管交换机一软路由<br>•	支持修改桥接模式的光猫</p>
+<h1 id="教程"><a href="#教程" class="headerlink" title="教程"></a>教程</h1><h2 id="一、设计网络拓扑"><a href="#一、设计网络拓扑" class="headerlink" title="一、设计网络拓扑"></a>一、设计网络拓扑</h2><p>  首先理清楚家里的网络设备拓扑关系，或者层级关系。一般来说，都是希望家里的设备都同时处在同一网段下，也就是在同一路由下。iptv则是另外的通信线路，和一般意义的网络不同。</p>
+<p>  我家没有IPTV，有一个多口路由器在弱电箱里分出两条lan到客厅的情况是最理想的。但是实际上我手上刚好只有一个2口软路由与一个8口支持vlan的交换机（其实就是爱折腾），于是乎家里的网络拓扑变成这样：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/1.jpg" class="" title="家里简单的网络拓扑">
+
+<p>  但是即使复杂一点，想要实现实现客厅iptv与路由器拨号，同时房间也有有线网可用可以这样：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/2.jpg" class="">
+
+<p> 了解了简单的VLAN实际上就可以部署复杂的环境了<br>  在完成了构思后就可以开始下一步了——</p>
+<h2 id="二、设置交换机VLAN"><a href="#二、设置交换机VLAN" class="headerlink" title="二、设置交换机VLAN"></a>二、设置交换机VLAN</h2><p>  对于我手上这台交换机，它最大的问题就是不自带DHCP功能，无法在离线情况下直接登陆进后台编辑VLAN设置。所以，这里我先设置好交换机VLAN，之后就可以方便接线联网了。<br>  首先在路由器的DHCP分配池里找到交换机的IP，然后登陆进网管交换机的后台，这里用的是TPLINK的8口网管交换机：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/3.png" class="" title="OPENWRT里我的交换机直接显示成了Switch1，非常好找。">
+
+<p>  TPLINK的网管交换机初次使用可能需要用它自己的商云app初始化，设置账号密码，然后才能进他的后台，这点我不知道有没有更方便的解决方法，如果请不吝赐教~</p>
+ <img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/4.jpg" class="" title="万恶的商云app，而且之后配置完直接就离线了，想用一下它的管理功能都不行">
+
+<p>  VLAN千万不要在APP里面设置，设置完之后连不上网不说，拓扑图也给你搞乱，软路由也识别不了，因为用的MTU VLAN。一定要进入管理后台用802.1Q VLAN，像这样：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/5.png" class="">
+<p>  这里我设置端口 1 为VLAN 101 Tagged，端口 3 为VLAN 101 Untagged，对应上面第一个拓扑图的 1、5 端口。</p>
+<p>  Tagged端口，即从此端口进入的流量，默认被打上一个的标签，在这里就是“101”，而打上了标签的流量，只会从对应的Untagged端口流出。VLAN 1 则是Default VLAN，也就是默认流量都从属于VLAN 1 。在这里，我们希望默认流量是“上网流量”，局域网下的任意设备都可以使用；而应该进入软路由拨号的 光转电 流量则是特殊的“101”流量，只进入软路由而不影响其他设备；软路由拨号后的“上网流量”则同样以VLAN 1 的形式从任意端口流出。这是后话。</p>
+<h2 id="三、设置软路由VLAN与拨号"><a href="#三、设置软路由VLAN与拨号" class="headerlink" title="三、设置软路由VLAN与拨号"></a>三、设置软路由VLAN与拨号</h2><p>  我使用的是友达R4S软路由，刷OPENWRT系统，进入网络-接口界面，然后添加新接口：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/6.png" class="">
+<p>  一般来说WAN口是eth0，LAN口是eth1。根据WAN口，我们这里设置名称随便填，协议选不配置协议，设备在最下面输入eth0.101（eth + 对应的口 . vlan号），然后创建，你就能看到出现了一个新设备。然后，连好设备，按照一般拨号上网的方法，WAN的设备选择eth0.101，输入账密保存，就能连上网了。如果不行，请重启路由器并耐心等5-10分钟，有可能上次拨号未主动断开，触发了多播保护，暂时拨不上。一般一会儿就能拨通上网了。有关IPV6的配置，我有空会再写一篇关于一般家庭IPv6拨号该如何配置的文章。在这里，我建议在拨号成功后，在LAN口DHCP服务器下的IPv6设置 设置成如图：</p>
+<img src="/2023/01/28/%E5%8D%95%E7%BA%BF%E5%A4%8D%E7%94%A8%EF%BC%8C%E6%97%A7%E5%AE%B6%E7%9A%84%E6%9C%AC%E5%9C%B0%E5%8C%96%E4%B9%8B%E8%B7%AF/7.png" class="" title="IPv6 RA设置一般不用理会">
+
+<h2 id="四、其他事项"><a href="#四、其他事项" class="headerlink" title="四、其他事项"></a>四、其他事项</h2><p>  像IPTV的配置，无非是把软路由换成另一个网管交换机，并且多设置一条专供IPTV流量的VLAN，并没有什么质的区别。<br>  到这里，你一定成功实现了自己的需求了吧！如果有什么问题，欢迎留言来讨论哦~</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/network/" rel="tag"># network</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/01/28/%E5%9F%BA%E4%BA%8EIPV6%E7%9A%84%E6%9C%8D%E5%8A%A1%E8%AE%BF%E9%97%AE/" rel="prev" title="基于IPV6的服务访问">
+                  <i class="fa fa-chevron-left"></i> 基于IPV6的服务访问
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class=""></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Samuka007</span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+  <script class="next-config" data-name="mermaid" type="application/json">{"enable":true,"theme":{"light":"default","dark":"dark"},"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.3.0/mermaid.min.js","integrity":"sha256-QdTG1YTLLTwD3b95jLqFxpQX9uYuJMNAtVZgwKX4oYU="}}</script>
+  <script src="/js/third-party/tags/mermaid.js"></script>
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
