@@ -1,9 +1,25 @@
-# Samuka007's Blog
+---
+layout: home
+title: Samuka007 的博客
+# titleTemplate: 
 
-> You'll hate me more than I'll miss you.
+hero:
+  name: Samuka007
+  text: 的博客
+  tagline: You'll hate me more than I'll miss you.
+  actions:
+    - theme: brand
+      text: 继续
+      link: /blog/continue
+    - theme: alt
+      text: DragonOS
+      link: https://github.com/DragonOS-Community/DragonOS
+  image:
+    src: https://avatars.githubusercontent.com/u/49808042?s=240&v=4
+    alt: Avator
 
-<!-- ---
-
-这里是Samuka007的个人博客。 
-
-Here is Samuka007's personal blog. -->
+features:
+  - icon: 💡
+    title: 注意
+    details: 此博客可能会在某天迁移到自定义网站。
+---
