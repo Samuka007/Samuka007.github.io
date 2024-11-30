@@ -1,12 +1,12 @@
 ---
 layout: home
 
-title: Samuka007's Blog
+title: EOD | Samuka007
 # titleTemplate: 
 
 hero:
   name: Samuka007
-  text: Yet another blog.
+  text: End of the day.
   tagline: You'll hate me more than I'll miss you.
   actions:
     - theme: brand

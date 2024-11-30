@@ -1,11 +1,11 @@
 ---
 layout: home
-title: Samuka007 的博客
+title: 一日终
 # titleTemplate: 
 
 hero:
   name: Samuka007
-  text: 的博客
+  text: 一日终
   tagline: You'll hate me more than I'll miss you.
   actions:
     - theme: brand
