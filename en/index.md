@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Blog
-      link: /blog/continue
+      link: /en/blog/continue
     - theme: alt
       text: DragonOS
       link: https://github.com/DragonOS-Community/DragonOS
@@ -20,8 +20,8 @@ hero:
     alt: Avator
 
 features:
-#   - icon: 
-  - title: Info
+  - icon: 💡
+    title: Info
     details: This blog may be migrate to custom website someday.
 #   - title: Enjoy the Vite DX
 #     details: Instant server start, lightning fast hot updates, and leverage Vite ecosystem plugins.
