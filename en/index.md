@@ -11,12 +11,12 @@ hero:
   actions:
     - theme: brand
       text: Blog
-      link: /blog/24-11-30-continue
+      link: /blog/continue
     - theme: alt
       text: DragonOS
       link: https://github.com/DragonOS-Community/DragonOS
   image:
-    src: https://avatars.githubusercontent.com/u/49808042
+    src: https://avatars.githubusercontent.com/u/49808042?s=240&v=4
     alt: Avator
 
 features:
