@@ -41,3 +41,52 @@ PUBLIC_INTERFACE=eth1
 我不知道有没有人这么蠢，反正我部署的时候外面的路由开着clash，规则里没添加 `172.24.4.0/24` 
 的例外，结果添加一条静态路由给路由表干废了。所以说运维须谨慎，网络设置记得多留个心眼。
 :::
+
+### Cloud-init
+> 编辑于 24-12-11
+
+常用的就是换个源，譬如清华源
+```yaml
+#cloud-config
+apt:
+    sources_list: |
+      Types: deb
+      URIs: http://mirrors.tuna.tsinghua.edu.cn/ubuntu
+      Suites: $RELEASE $RELEASE-updates $RELEASE-backports
+      Components: main restricted universe multiverse
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+      Types: deb
+      URIs: http://mirrors.tuna.tsinghua.edu.cn/ubuntu
+      Suites: $RELEASE-security
+      Components: main restricted universe multiverse
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
+
+安装 docker
+```yaml
+#cloud-config
+apt:
+    sources_list: |
+      Types: deb
+      URIs: http://mirrors.tuna.tsinghua.edu.cn/ubuntu
+      Suites: $RELEASE $RELEASE-updates $RELEASE-backports
+      Components: main restricted universe multiverse
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+      Types: deb
+      URIs: http://mirrors.tuna.tsinghua.edu.cn/ubuntu
+      Suites: $RELEASE-security
+      Components: main restricted universe multiverse
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+runcmd:
+  - sudo apt update
+  - sudo apt install ca-certificates curl
+  - sudo install -m 0755 -d /etc/apt/keyrings
+  - sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - sudo chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - sudo apt update
+  - sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
