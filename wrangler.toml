@@ -1,0 +1,5 @@
+name = "samuka007-blog"
+compatibility_date = "2025-08-06"
+
+[assets]
+directory = "./dist"
