@@ -36,11 +36,5 @@
   },
   "devDependencies": {
     "typescript-eslint": "^8.50.1"
-  },
-  "pnpm": {
-    "allowedBuiltDependencies": [
-      "esbuild",
-      "sharp"
-    ]
   }
 }
